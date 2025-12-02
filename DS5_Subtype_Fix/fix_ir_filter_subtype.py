@@ -12,7 +12,6 @@ Use with caution.
 import sys
 import struct
 import zlib     # CRC
-sys.path.append(r"C:\Work\Git\eraikhel_fork\lrs_sandbox1\build\Debug")
 import pyrealsense2 as rs
 
 
