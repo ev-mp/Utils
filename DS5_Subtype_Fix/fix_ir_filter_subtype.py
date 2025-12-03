@@ -8,7 +8,6 @@ D435, D435i, and D435if allows to adjust to assembly ID
 WARNING: The script modifies the device identification ID.
 Use with caution.
 """
-
 import sys
 import struct
 import zlib     # CRC
@@ -23,10 +22,10 @@ BLUE = "\033[94m"
 BOLD = "\033[1m"
 RESET = "\033[0m"
 
+# HWM Commands
 udw_command = 0x91
 udr_command = 0x92
 rst_command = 0x20
-
 
 def list_devices(ctx) -> list[rs.device]:
     devices = ctx.query_devices()
@@ -46,6 +45,7 @@ def build_subtype_table(ir_filter: bool) -> bytes:
     return header + sub_type_data
 
 def update_device_subtype(device, command, irFilter=None) -> None:
+
     hw_monitor = device.as_debug_protocol()
 
     print(f"\nSending command: {command}")
@@ -98,10 +98,10 @@ def parse_current_type(device) -> None:
             print(f"FW Error: Expected 24 bytes, got {len(response)} bytes")
         else:
             # Parse byte 20 (0-based index)
-            ir_cut_filter = response[20]
-            ir_cut_status = "Present" if ir_cut_filter == 1 else "Off"
-            ir_cut_color = GREEN if ir_cut_filter == 1 else RED
-            print(f"IR Cut Filter present: {ir_cut_color}{ir_cut_status}{RESET}")
+            ir_pass_filter = response[20]
+            ir_pass_status = "Present" if ir_pass_filter == 1 else "Off"
+            ir_pass_color = GREEN if ir_pass_filter == 1 else RED
+            print(f"IR Pass Filter present: {ir_pass_color}{ir_pass_status}{RESET}")
 
 def yes_no_prompt(prompt: str) -> bool:
     while True:
@@ -142,14 +142,14 @@ def main():
     for dev in target_devices:
         parse_current_type(dev)
         # Ask user to interactively update the assembly type
-        print(f"\nInspect the device appearance/labels for the presence of IR Filter")
-        ir_filter = yes_no_prompt(f"{BOLD}{BLUE}Is the device equipped with IR Cut filter? [y/N]: {RESET}")
-        ack = yes_no_prompt(f"{BOLD}{YELLOW}WARNING: This will modify device's Flash NVM. Confirm? [y/N]: {RESET}")
+        print(f"\nInspect the device appearance/labels for the presence of IR Pass Filter")
+        ir_filter = yes_no_prompt(f"{BOLD}{BLUE}Is the device equipped with IR Pass filter? [y/N]: {RESET}")
+        ack = yes_no_prompt(f"{BOLD}{YELLOW}WARNING: The operation will modify device's Flash NVM. Confirm? [y/N]: {RESET}")
         if (ack):
             print(f"\nUpdating device type:")
             update_device_subtype(dev, "UDW", ir_filter)
         else:
-            print(f"\nsub-type update is skipped")
+            print(f"\nsub-type update is skipped for current device")
 
     print("\nTask completed.")
 
