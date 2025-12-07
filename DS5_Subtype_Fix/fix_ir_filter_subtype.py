@@ -11,6 +11,7 @@ Use with caution.
 import sys
 import struct
 import zlib     # CRC
+sys.path.append(r"C:\Work\Git\eraikhel_fork\lrs_sandbox1\build\Debug")
 import pyrealsense2 as rs
 
 
@@ -47,9 +48,8 @@ def build_subtype_table(ir_filter: bool) -> bytes:
 def update_device_subtype(device, command, irFilter=None) -> None:
 
     hw_monitor = device.as_debug_protocol()
-
     print(f"\nSending command: {command}")
-
+    response = []  # Ensure response is always defined
     try:
         # Build the command payload
         subtype_table = build_subtype_table(irFilter)
@@ -62,7 +62,6 @@ def update_device_subtype(device, command, irFilter=None) -> None:
                                        param4=0,
                                        data=st1)
         response = hw_monitor.send_and_receive_raw_data(payload)
-
         print(f"Response (hex): {[hex(x) for x in response]}")
     except Exception as e:
         print(f"Error sending command: {e}")
@@ -74,7 +73,7 @@ def update_device_subtype(device, command, irFilter=None) -> None:
         try: # Devices with default sub-type have no data written in NVM
             response = hw_monitor.send_and_receive_raw_data(hw_monitor.build_command(opcode=rst_command))
         except Exception as e:
-            pass
+            print(f"Error resetting device: {e}")
     else:
         print(f"Response (hex): {[hex(x) for x in response]}")
         print(f"{RED}updating Flash NVM has failed. Copy and share the above response for analysis{RESET}")
@@ -106,7 +105,9 @@ def parse_current_type(device) -> None:
 def yes_no_prompt(prompt: str) -> bool:
     while True:
         answer = input(prompt).strip().lower()
-        if answer in ['y', 'n']:
+        if answer in ['y', 'n', '']:
+            if answer == '':
+                return False  # Default to No
             return answer == 'y'
         print(f"{YELLOW}Invalid input{RESET}. Please enter 'y' or 'n'.")
 
